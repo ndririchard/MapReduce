@@ -4,14 +4,12 @@ import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.*;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 
 
 import mapper.MapperInterface;
 
-public class Reducer 
-    extends UnicastRemoteObject
+public class Reducer
     implements ReducerInterface {
     public ArrayList<String> result;
 

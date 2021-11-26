@@ -1,11 +1,9 @@
 package mapper;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 
-public class Mapper 
-    extends UnicastRemoteObject
+public class Mapper
     implements MapperInterface{
     public ArrayList<String> result;
 

@@ -14,8 +14,7 @@ import reducer.Reducer;
 import mapper.MapperInterface;
 import reducer.ReducerInterface;
 
-public class Manager 
-    extends UnicastRemoteObject
+public class Manager
     implements ManagerInterface{
     public ArrayList<String> result;
 
@@ -46,35 +45,29 @@ public class Manager
     }
     
     public ArrayList<String> splitFile(String text){
+
         ArrayList<String> splittedFile = new ArrayList<String>();
         ArrayList<String> formatedData = splitThis(text);
+        System.out.println(formatedData);
+
         int numberOfSubText = 2;
         
         int start = 0;
         int step = formatedData.size()/numberOfSubText;
-        int end = start + step;
-        try{
-            while (numberOfSubText != 0){
-                String subText = "";
-    
-                for (int y=start; y<end; y++){
-                    subText += formatedData.get(y) + " ";
-                }
-                splittedFile.add(subText);
-                start = end +1;
-                end = end + step;
-                numberOfSubText--;
-    
-            }
-        }catch(Exception e){
-            // pass
-        }
+        System.out.println(step);
+
+        int end;
+        //int end = start + step;
         
+        while (numberOfSubText != 0){
+            String seq_data =
+        }
+
         return splittedFile;   
     }
 
     public synchronized void start_mapping(MapperInterface machine1, MapperInterface machine2, ArrayList<String> data){
-        new Thread(){
+        Thread t1 = new Thread(){
             public void run(){
                 try {
                     machine1.mapping(data.get(0));
@@ -83,9 +76,9 @@ public class Manager
                     e.printStackTrace();
                 }
             }
-        }.start();
+        };
         
-        new Thread(){
+        Thread t2 = new Thread(){
             public void run(){
                 try {
                     machine2.mapping(data.get(1));
@@ -93,13 +86,25 @@ public class Manager
                     e.printStackTrace();
                 }
             }
-        }.start();
+        };
+
+        t1.start();
+        t2.start();
+
+        try {
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         
     }
 
     public ArrayList<String> mapReduce(String text) throws AccessException, RemoteException, NotBoundException{
         /*--------------step1 : split file--------------*/
         ArrayList<String> data = splitFile(text);
+        System.out.println(data);
 
         // select machinses which are able to do maping
         MapperInterface mapper1 = (MapperInterface) getAppRegistry().lookup("mapper1");
@@ -124,6 +129,7 @@ public class Manager
 
         // our registry is listenning the port 9000
         Registry registry = LocateRegistry.createRegistry(9000);
+        //UnicastRemoteObject.unexportObject(registry, true);
 
         /*-------------------------------------------------------*/
 
