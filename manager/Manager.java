@@ -36,7 +36,7 @@ public class Manager
     
     public ArrayList<String> splitThis(String text){
         ArrayList<String> result = new ArrayList<String>();
-        text = text.replaceAll("[.()\'\"-,;_]"," ");
+        text = text.replaceAll("[«».()\'\"-,;_]"," ");
         String[] textS = text.split("\\s+");
         for (String txt:textS){
             result.add(txt);
@@ -48,21 +48,32 @@ public class Manager
 
         ArrayList<String> splittedFile = new ArrayList<String>();
         ArrayList<String> formatedData = splitThis(text);
-        System.out.println(formatedData);
 
         int numberOfSubText = 2;
         
         int start = 0;
         int step = formatedData.size()/numberOfSubText;
-        System.out.println(step);
 
-        int end;
-        //int end = start + step;
-        
-        while (numberOfSubText != 0){
-            String seq_data =
+        int proof_reader = formatedData.size() % numberOfSubText;
+        int end = start + step + proof_reader;
+        try{
+            while (numberOfSubText != 0){
+                String subText = "";
+                
+
+                for (int y=start; y<end; y++){
+                    subText += formatedData.get(y) + " ";
+                }
+
+                splittedFile.add(subText);
+                start = end;
+                end = start + step;
+                numberOfSubText--;
+            }
+        }catch(IndexOutOfBoundsException e){
+            // pass
         }
-
+        
         return splittedFile;   
     }
 
@@ -70,8 +81,9 @@ public class Manager
         Thread t1 = new Thread(){
             public void run(){
                 try {
+
                     machine1.mapping(data.get(0));
-                    //machine2.mapping(data.get(1));
+
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
@@ -81,7 +93,9 @@ public class Manager
         Thread t2 = new Thread(){
             public void run(){
                 try {
+
                     machine2.mapping(data.get(1));
+
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
@@ -92,8 +106,10 @@ public class Manager
         t2.start();
 
         try {
+
             t1.join();
             t2.join();
+
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -104,11 +120,11 @@ public class Manager
     public ArrayList<String> mapReduce(String text) throws AccessException, RemoteException, NotBoundException{
         /*--------------step1 : split file--------------*/
         ArrayList<String> data = splitFile(text);
-        System.out.println(data);
 
         // select machinses which are able to do maping
         MapperInterface mapper1 = (MapperInterface) getAppRegistry().lookup("mapper1");
         MapperInterface mapper2 = (MapperInterface) getAppRegistry().lookup("mapper2");
+        MapperInterface mapper3 = (MapperInterface) getAppRegistry().lookup("mapper3");
 
         /*--------------step2 : mapping-----------------*/
         
@@ -137,6 +153,8 @@ public class Manager
         Manager manager = new Manager();
         Mapper mapper1 = new Mapper();
         Mapper mapper2 = new Mapper();
+        Mapper mapper3 = new Mapper();
+        Mapper mapper4 = new Mapper();
         Reducer reducer = new Reducer();
 
         /*-------------------------------------------------------*/
@@ -145,6 +163,8 @@ public class Manager
         ManagerInterface stub_manager = (ManagerInterface) UnicastRemoteObject.exportObject(manager, 9000);
         MapperInterface stub_mapper1 = (MapperInterface) UnicastRemoteObject.exportObject(mapper1, 9000);
         MapperInterface stub_mapper2 = (MapperInterface) UnicastRemoteObject.exportObject(mapper2, 9000);
+        MapperInterface stub_mapper3 = (MapperInterface) UnicastRemoteObject.exportObject(mapper3, 9000);
+        MapperInterface stub_mapper4 = (MapperInterface) UnicastRemoteObject.exportObject(mapper4, 9000);
         ReducerInterface stub_reducer = (ReducerInterface) UnicastRemoteObject.exportObject(reducer, 9000);
 
         /*-------------------------------------------------------*/
@@ -153,6 +173,8 @@ public class Manager
         registry.bind("manager",stub_manager);
         registry.bind("mapper1",stub_mapper1);
         registry.bind("mapper2",stub_mapper2);
+        registry.bind("mapper3",stub_mapper3);
+        registry.bind("mapper4",stub_mapper4);
         registry.bind("reducer",stub_reducer);
 
         System.err.println("Manager is ready"); 
