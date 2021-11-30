@@ -7,7 +7,10 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 import mapper.Mapper;
 import reducer.Reducer;
@@ -16,10 +19,38 @@ import reducer.ReducerInterface;
 
 public class Manager
     implements ManagerInterface{
+    private int nb_mapper;
+    private ArrayList<MapperInterface> selected_mappers;
+    private ArrayList<ReducerInterface> selected_reducers;
     public ArrayList<String> result;
+
 
     public Manager() throws RemoteException{
         super();
+    }
+
+    public int getNbMapper(){
+        return this.nb_mapper;
+    }
+
+    public void setNbMapper(int v){
+        this.nb_mapper=v;
+    }
+
+    public ArrayList<MapperInterface> getSelectedMappers(){
+        return this.selected_mappers;
+    }
+
+    public void addMapper(MapperInterface map){
+        this.getSelectedMappers().add(map);
+    }
+
+    public ArrayList<ReducerInterface> getSelectedReducer(){
+        return this.selected_reducers;
+    }
+
+    public void addReducer(ReducerInterface red){
+        this.getSelectedReducer().add(red);
     }
 
     public Registry getAppRegistry() throws RemoteException{
@@ -33,11 +64,19 @@ public class Manager
     public void setResult(ArrayList<String> r){
         this.result = r;
     }
-    
+
+    public String deleteAccent(String text){
+        String strTemp = Normalizer.normalize(text, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return pattern.matcher(strTemp).replaceAll("");
+    }
+
     public ArrayList<String> splitThis(String text){
         ArrayList<String> result = new ArrayList<String>();
-        text = text.replaceAll("[«».()\'\"-,;_]"," ");
-        String[] textS = text.split("\\s+");
+        text = deleteAccent(text);
+        text = text.replaceAll("[^a-zA-Z0-9\\s]","");
+        text = text.replaceAll("[\\s]","-_-");
+        String[] textS = text.split("-_-");
         for (String txt:textS){
             result.add(txt);
         }
@@ -49,7 +88,7 @@ public class Manager
         ArrayList<String> splittedFile = new ArrayList<String>();
         ArrayList<String> formatedData = splitThis(text);
 
-        int numberOfSubText = 2;
+        int numberOfSubText = nb_machine_acc_data_size(formatedData);
         
         int start = 0;
         int step = formatedData.size()/numberOfSubText;
@@ -117,6 +156,31 @@ public class Manager
         
     }
 
+    public int nb_machine_acc_data_size(ArrayList<String> data){
+        int r, d_size;
+        r = 2;
+        d_size = data.size();
+        
+        if (d_size>=0 && d_size<1000){
+            r = 2;
+        }
+
+        if (d_size>=1000 && d_size<10000){
+            r = 4;
+        }
+
+        if (d_size>=10000){
+            r = 6;
+        }
+
+        return r;
+
+    }
+
+    public int nb_reducer(int val){
+        return val/2;
+    }
+
     public ArrayList<String> mapReduce(String text) throws AccessException, RemoteException, NotBoundException{
         /*--------------step1 : split file--------------*/
         ArrayList<String> data = splitFile(text);
@@ -155,7 +219,11 @@ public class Manager
         Mapper mapper2 = new Mapper();
         Mapper mapper3 = new Mapper();
         Mapper mapper4 = new Mapper();
-        Reducer reducer = new Reducer();
+        Mapper mapper5 = new Mapper();
+        Mapper mapper6 = new Mapper();
+        Reducer reducer1 = new Reducer();
+        Reducer reducer2 = new Reducer();
+        Reducer reducer3 = new Reducer();
 
         /*-------------------------------------------------------*/
 
@@ -165,7 +233,11 @@ public class Manager
         MapperInterface stub_mapper2 = (MapperInterface) UnicastRemoteObject.exportObject(mapper2, 9000);
         MapperInterface stub_mapper3 = (MapperInterface) UnicastRemoteObject.exportObject(mapper3, 9000);
         MapperInterface stub_mapper4 = (MapperInterface) UnicastRemoteObject.exportObject(mapper4, 9000);
-        ReducerInterface stub_reducer = (ReducerInterface) UnicastRemoteObject.exportObject(reducer, 9000);
+        MapperInterface stub_mapper5 = (MapperInterface) UnicastRemoteObject.exportObject(mapper5, 9000);
+        MapperInterface stub_mapper6 = (MapperInterface) UnicastRemoteObject.exportObject(mapper6, 9000);
+        ReducerInterface stub_reducer1 = (ReducerInterface) UnicastRemoteObject.exportObject(reducer1, 9000);
+        ReducerInterface stub_reducer2 = (ReducerInterface) UnicastRemoteObject.exportObject(reducer2, 9000);
+        ReducerInterface stub_reducer3 = (ReducerInterface) UnicastRemoteObject.exportObject(reducer3, 9000);
 
         /*-------------------------------------------------------*/
         // Binding the remote object in the registry
@@ -175,9 +247,12 @@ public class Manager
         registry.bind("mapper2",stub_mapper2);
         registry.bind("mapper3",stub_mapper3);
         registry.bind("mapper4",stub_mapper4);
-        registry.bind("reducer",stub_reducer);
+        registry.bind("mapper5",stub_mapper5);
+        registry.bind("mapper6",stub_mapper6);
+        registry.bind("reducer1",stub_reducer1);
+        registry.bind("reducer2",stub_reducer2);
+        registry.bind("reducer3",stub_reducer3);
 
         System.err.println("Manager is ready"); 
-
     }
 }
