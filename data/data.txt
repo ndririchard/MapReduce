@@ -1,0 +1,5 @@
+This client first obtains the stub for the registry by invoking the static LocateRegistry.getRegistry method with the hostname specified on the command line. If no hostname is specified, then null is used as the hostname indicating that the local host address should be used.
+
+Next, the client invokes the remote method lookup on the registry stub to obtain the stub for the remote object from the server's registry.
+
+Finally, the client invokes the sayHello method on the remote object's stub, which causes the following actions to happen:
