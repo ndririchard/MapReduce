@@ -23,7 +23,7 @@ Follow this [link](https://www.ibm.com/topics/mapreduce) to know more about Map 
 The project is made with [java RMI](https://docs.oracle.com/javase/tutorial/rmi/index.html).<br>
 Follow these steps to run it on your computer:
 ```
->>> git clone 
+>>> git clone https://github.com/ndririchard/MapReduce.git
 >>> cd (here you put the path of the clonning file)
 ```
 
